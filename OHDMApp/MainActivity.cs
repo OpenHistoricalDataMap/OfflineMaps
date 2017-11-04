@@ -25,6 +25,39 @@ namespace OHDMApp
         //Here needs to be the personal API-Key from the own Carto-Account, see https://carto.com/docs/carto-engine/mobile-sdk/getting-started/#registering-your-app
         const string LICENSE = "XXX";
         private List<PostgisObject> csvContent;
+        private MapView mapView;
+        private EditText datePickerText;
+
+        public void dateset(object sender, DatePickerDialog.DateSetEventArgs args)
+        {
+            datePickerText.Text = args.Date.ToShortDateString();
+            DateTime day = args.Date;
+            var progressDialog2 = new ProgressDialog(this);
+            progressDialog2.SetCancelable(false);
+            progressDialog2.SetCanceledOnTouchOutside(false);
+            progressDialog2.Indeterminate = false;
+            progressDialog2.SetProgressStyle(ProgressDialogStyle.Horizontal);
+            progressDialog2.SetTitle("Bitte warten...");
+            progressDialog2.SetMessage("Die Karte wird aus dem Kartenstand des gewählten Datums aufgebaut...");
+            progressDialog2.Show();
+            MapDrawer.MapEvent += (source, args2) =>
+            {
+                RunOnUiThread(() =>
+                {
+                    progressDialog2.SetMessage(args2.GetMessage());
+                    progressDialog2.Progress =
+                        (int)(((double)args2.GetActive() / (double)args2.GetMax()) * 100);
+                });
+            };
+            new Thread(new ThreadStart(delegate
+            {
+                MapDrawer.DrawMap(day, mapView);
+                RunOnUiThread(() =>
+                {
+                    progressDialog2.Hide();
+                });
+            })).Start();
+        }
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -67,37 +100,7 @@ namespace OHDMApp
             datePickerText.Focusable = false;
             datePickerText.Click += delegate
             {
-                var dialog = new DatePickerDialog(this);
-                dialog.DateSet += (sender, args) =>
-                {
-                    datePickerText.Text = args.Date.ToShortDateString();
-                    DateTime day = args.Date;
-                    var progressDialog2 = new ProgressDialog(this);
-                    progressDialog2.SetCancelable(false);
-                    progressDialog2.SetCanceledOnTouchOutside(false);
-                    progressDialog2.Indeterminate = false;
-                    progressDialog2.SetProgressStyle(ProgressDialogStyle.Horizontal);
-                    progressDialog2.SetTitle("Bitte warten...");
-                    progressDialog2.SetMessage("Die Karte wird aus dem Kartenstand des gewählten Datums aufgebaut...");
-                    progressDialog2.Show();
-                    MapDrawer.MapEvent += (source, args2) =>
-                    {
-                        RunOnUiThread(() =>
-                        {
-                            progressDialog2.SetMessage(args2.GetMessage());
-                            progressDialog2.Progress =
-                                (int) (((double) args2.GetActive() / (double) args2.GetMax()) * 100);
-                        });
-                    };
-                    new Thread(new ThreadStart(delegate
-                    {
-                        MapDrawer.DrawMap(day, mapView);
-                        RunOnUiThread(() =>
-                        {
-                            progressDialog2.Hide();
-                        });
-                    })).Start();
-                };
+                var dialog = new DatePickerDialog(this, dateset, 2017, 0, 1);
                 dialog.Show();
             };
         }
