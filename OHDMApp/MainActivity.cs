@@ -28,10 +28,10 @@ namespace OHDMApp
         const string LICENSE = "XTUN3Q0ZIYnpMSkdOQWRVUnhLUEtPSDM3ZlM4NU9aSDVBaFFETldxUURyOExEV1NNZUljdklKdlNISEtzb2c9PQoKYXBwVG9rZW49NjliMmRhYTgtOWM3Mi00OGFiLTk1ZDYtZTIxOWVmMThkMjA0CnBhY2thZ2VOYW1lPWNvbS5pbHllcy5PSERNQXBwCm9ubGluZUxpY2Vuc2U9MQpwcm9kdWN0cz1zZGsteGFtYXJpbi1hbmRyb2lkLTQuKgp3YXRlcm1hcms9Y2FydG9kYgo=";
 
         //FTP server connection credentials
-        private string serverName = "uranus.f4.htw-berlin.de";                                                   //server adress
-        private string login = "s0548859";                                                                       // login   
-        private string password = "sY-9Z8m-";                                                                    // password    
-        private string directory = "/home/s0548859/OhdmMaps/";                                                   // Directory containing the locations
+        private string serverName = "";                                                   //server adress
+        private string login = "";                                                                       // login   
+        private string password = "";                                                                    // password    
+        private string directory = "";                                                   // Directory containing the locations
 
 
         //Definition of global variables
