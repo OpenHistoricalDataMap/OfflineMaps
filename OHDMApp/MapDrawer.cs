@@ -26,6 +26,7 @@ namespace OHDMApp
         private int active;
         private int max;
         private string message;
+
         public MapEventArgs(int active, int max, string message)
         {
             this.active = active;
@@ -110,6 +111,15 @@ namespace OHDMApp
         private static readonly LocalVectorDataSource dataSourceForestsText =
             new LocalVectorDataSource(projection, LocalSpatialIndexType.LocalSpatialIndexTypeKdtree);
 
+        private static readonly LocalVectorDataSource dataSourceBuildings =
+           new LocalVectorDataSource(projection, LocalSpatialIndexType.LocalSpatialIndexTypeKdtree);
+        private static readonly LocalVectorDataSource dataSourceBuildingsText =
+            new LocalVectorDataSource(projection, LocalSpatialIndexType.LocalSpatialIndexTypeKdtree);
+        private static readonly LocalVectorDataSource dataSourceShops =
+         new LocalVectorDataSource(projection, LocalSpatialIndexType.LocalSpatialIndexTypeKdtree);
+        private static readonly LocalVectorDataSource dataSourceShopsText =
+            new LocalVectorDataSource(projection, LocalSpatialIndexType.LocalSpatialIndexTypeKdtree);
+
         public static void DrawMap(DateTime day, MapView mapView)
         {
             //The historical day of which the map should be rendered is set
@@ -129,12 +139,19 @@ namespace OHDMApp
             DrawPrimaries();
             DrawTrunks();
             DrawMotorways();
+            DrawBuildings();
+            EndMap();
+        }
+        private static void EndMap()
+        {
+            //MessageBox content to be rendered
+            MapEvent(null, new MapEventArgs(0, 0, "End"));
         }
 
         private static void DrawPoints()
         {
             //MessageBox content to be rendered
-            MapEvent(null, new MapEventArgs(0, 100, "Frage Punkte ab..."));
+            MapEvent(null, new MapEventArgs(0, 100, "Calling points"));
             //Objects are pulled from SQLite database
             var points = d.getObjects(day, 1);
             //Layers and the ZoomLevels where they should be visible are created (Zoomlevels range from 0 to 24)
@@ -146,25 +163,23 @@ namespace OHDMApp
             mapView.Layers.Add(overlayLayerText);
             VectorElementVector v = new VectorElementVector();
             VectorElementVector vText = new VectorElementVector();
+            mapView.FocusPos = projection.FromWgs84(new MapPos(points[0].pointList.coordinates[0],
+                        points[0].pointList.coordinates[1]));
             int i = 0;
             //Objects are drawn on layer
             foreach (var obj in points)
             {
+                if (i > 500) continue;
                 var pt = new Point(
-                    projection.FromWgs84(new MapPos(obj.pointList.coordinates[0],
-                        obj.pointList.coordinates[1])), Styles.GetDefaultPointStyle().BuildStyle());
-                //pt.SetMetaDataElement("ClickText", obj.name);
-
+                projection.FromWgs84(new MapPos(obj.pointList.coordinates[0],
+                obj.pointList.coordinates[1])), Styles.GetDefaultPointStyle().BuildStyle());
                 v.Add(pt);
-                if (i == 0)
-                    mapView.FocusPos = projection.FromWgs84(new MapPos(obj.pointList.coordinates[0],
-                        obj.pointList.coordinates[1]));
                 var textpopup1 = new Text(
                     projection.FromWgs84(new MapPos(obj.pointList.coordinates[0], obj.pointList.coordinates[1])),
                     Styles.GetDefaultTextStyle().BuildStyle(),
                     obj.name);
                 vText.Add(textpopup1);
-                MapEvent(null, new MapEventArgs(i, points.Count, "Zeichne Punkte..."));
+                MapEvent(null, new MapEventArgs(i, points.Count, "Drawing points"));
                 i++;
             }
             //Layers are cleared of old data and written with new data
@@ -176,7 +191,7 @@ namespace OHDMApp
 
         private static void DrawMotorways()
         {
-            MapEvent(null, new MapEventArgs(0, 100, "Frage Typ highway motorway ab..."));
+            MapEvent(null, new MapEventArgs(0, 100, "Calling type motorway.."));
             var motorways = d.getObjects(day, 2, 556);
             var overlayLayer = new VectorLayer(dataSourceMotorways);
             overlayLayer.VisibleZoomRange = new MapRange(6, 24);
@@ -190,6 +205,7 @@ namespace OHDMApp
             VectorElementVector v = new VectorElementVector();
             VectorElementVector v2 = new VectorElementVector();
             VectorElementVector vText = new VectorElementVector();
+            mapView.FocusPos = projection.FromWgs84(new MapPos(motorways[0].lineList.coordinates[0][0], motorways[0].lineList.coordinates[0][1]));
             int i = 0;
             foreach (var obj in motorways)
             {
@@ -202,13 +218,11 @@ namespace OHDMApp
                 v.Add(line);
                 var line2 = new Line(linePoses, Styles.GetMotorwayStyle2().BuildStyle());
                 v2.Add(line2);
-                if (i == 0)
-                    mapView.FocusPos = projection.FromWgs84(new MapPos(obj.lineList.coordinates[0][0], obj.lineList.coordinates[0][1]));
                 var textpopup1 = new Text(projection.FromWgs84(new MapPos(obj.lineList.coordinates[0][0], obj.lineList.coordinates[0][1])),
                     Styles.GetDefaultTextStyle().BuildStyle(),
                     obj.name);
                 vText.Add(textpopup1);
-                MapEvent(null, new MapEventArgs(i, motorways.Count, "Zeichne Typ highway motorway..."));
+                MapEvent(null, new MapEventArgs(i, motorways.Count, "Drawing type motorway..."));
                 i++;
             }
             dataSourceMotorways.RemoveAll(dataSourceMotorways.GetAll());
@@ -221,7 +235,7 @@ namespace OHDMApp
 
         private static void DrawTrunks()
         {
-            MapEvent(null, new MapEventArgs(0, 100, "Frage Typ highway trunk ab..."));
+            MapEvent(null, new MapEventArgs(0, 100, "Calling type trunk..."));
             var trunks = d.getObjects(day, 2, 557);
             var overlayLayer = new VectorLayer(dataSourceTrunks);
             overlayLayer.VisibleZoomRange = new MapRange(6, 24);
@@ -235,6 +249,7 @@ namespace OHDMApp
             VectorElementVector v = new VectorElementVector();
             VectorElementVector v2 = new VectorElementVector();
             VectorElementVector vText = new VectorElementVector();
+            mapView.FocusPos = projection.FromWgs84(new MapPos(trunks[0].lineList.coordinates[0][0], trunks[0].lineList.coordinates[0][1]));
             int i = 0;
             foreach (var obj in trunks)
             {
@@ -247,13 +262,11 @@ namespace OHDMApp
                 v.Add(line);
                 var line2 = new Line(linePoses, Styles.GetTrunkStyle2().BuildStyle());
                 v2.Add(line2);
-                if (i == 0)
-                    mapView.FocusPos = projection.FromWgs84(new MapPos(obj.lineList.coordinates[0][0], obj.lineList.coordinates[0][1]));
                 var textpopup1 = new Text(projection.FromWgs84(new MapPos(obj.lineList.coordinates[0][0], obj.lineList.coordinates[0][1])),
                     Styles.GetDefaultTextStyle().BuildStyle(),
                     obj.name);
                 vText.Add(textpopup1);
-                MapEvent(null, new MapEventArgs(i, trunks.Count, "Zeichne Typ highway trunk..."));
+                MapEvent(null, new MapEventArgs(i, trunks.Count, "Drawing type trunk..."));
                 i++;
             }
             dataSourceTrunks.RemoveAll(dataSourceTrunks.GetAll());
@@ -266,7 +279,7 @@ namespace OHDMApp
 
         private static void DrawPrimaries()
         {
-            MapEvent(null, new MapEventArgs(0, 100, "Frage Typ highway primary ab..."));
+            MapEvent(null, new MapEventArgs(0, 100, "Calling type primary highway..."));
             var primaries = d.getObjects(day, 2, 558);
             var overlayLayer = new VectorLayer(dataSourcePrimaries);
             overlayLayer.VisibleZoomRange = new MapRange(6, 24);
@@ -292,7 +305,7 @@ namespace OHDMApp
                     Styles.GetDefaultTextStyle().BuildStyle(),
                     obj.name);
                 vText.Add(textpopup1);
-                MapEvent(null, new MapEventArgs(i, primaries.Count, "Zeichne Typ highway primary..."));
+                MapEvent(null, new MapEventArgs(i, primaries.Count, "Drawing type primary highway..."));
                 i++;
             }
             dataSourcePrimaries.RemoveAll(dataSourcePrimaries.GetAll());
@@ -303,7 +316,7 @@ namespace OHDMApp
 
         private static void DrawSecondaries()
         {
-            MapEvent(null, new MapEventArgs(0, 100, "Frage Typ highway secondary ab..."));
+            MapEvent(null, new MapEventArgs(0, 100, "Calling type secondary highway..."));
             var secondaries = d.getObjects(day, 2, 559);
             var overlayLayer = new VectorLayer(dataSourceSecondaries);
             overlayLayer.VisibleZoomRange = new MapRange(9, 24);
@@ -329,7 +342,7 @@ namespace OHDMApp
                     Styles.GetDefaultTextStyle().BuildStyle(),
                     obj.name);
                 vText.Add(textpopup1);
-                MapEvent(null, new MapEventArgs(i, secondaries.Count, "Zeichne Typ highway secondary..."));
+                MapEvent(null, new MapEventArgs(i, secondaries.Count, "Drawing type secondary highway..."));
                 i++;
             }
             dataSourceSecondaries.RemoveAll(dataSourceSecondaries.GetAll());
@@ -340,7 +353,7 @@ namespace OHDMApp
 
         private static void DrawTertiaries()
         {
-            MapEvent(null, new MapEventArgs(0, 100, "Frage Typ highway tertiary ab..."));
+            MapEvent(null, new MapEventArgs(0, 100, "Calling type tertiary highway..."));
             var tertiaries = d.getObjects(day, 2, 560);
             var overlayLayer = new VectorLayer(dataSourceTertiaries);
             overlayLayer.VisibleZoomRange = new MapRange(11, 24);
@@ -366,7 +379,7 @@ namespace OHDMApp
                     Styles.GetDefaultTextStyle().BuildStyle(),
                     obj.name);
                 vText.Add(textpopup1);
-                MapEvent(null, new MapEventArgs(i, tertiaries.Count, "Zeichne Typ highway tertiary..."));
+                MapEvent(null, new MapEventArgs(i, tertiaries.Count, "Drawing type tertiary highway..."));
                 i++;
             }
             dataSourceTertiaries.RemoveAll(dataSourceTertiaries.GetAll());
@@ -377,7 +390,7 @@ namespace OHDMApp
 
         private static void DrawUnclassifieds()
         {
-            MapEvent(null, new MapEventArgs(0, 100, "Frage Typ highway unclassified ab..."));
+            MapEvent(null, new MapEventArgs(0, 100, "Calling type unclassified highway..."));
             var unclassifieds = d.getObjects(day, 2, 561);
             var overlayLayer = new VectorLayer(dataSourceUnclassifieds);
             overlayLayer.VisibleZoomRange = new MapRange(12, 24);
@@ -403,7 +416,7 @@ namespace OHDMApp
                     Styles.GetDefaultTextStyle().BuildStyle(),
                     obj.name);
                 vText.Add(textpopup1);
-                MapEvent(null, new MapEventArgs(i, unclassifieds.Count, "Zeichne Typ highway unclassified..."));
+                MapEvent(null, new MapEventArgs(i, unclassifieds.Count, "Drawing type unclassified highway..."));
                 i++;
             }
             dataSourceUnclassifieds.RemoveAll(dataSourceUnclassifieds.GetAll());
@@ -414,7 +427,7 @@ namespace OHDMApp
 
         private static void DrawRivers()
         {
-            MapEvent(null, new MapEventArgs(0, 100, "Frage Typ waterway river ab..."));
+            MapEvent(null, new MapEventArgs(0, 100, "Calling type waterway river..."));
             var rivers = d.getObjects(day, 2, 744);
             var overlayLayer = new VectorLayer(dataSourceRivers);
             overlayLayer.VisibleZoomRange = new MapRange(9, 24);
@@ -440,7 +453,7 @@ namespace OHDMApp
                     Styles.GetDefaultTextStyle().BuildStyle(),
                     obj.name);
                 vText.Add(textpopup1);
-                MapEvent(null, new MapEventArgs(i, rivers.Count, "Zeichne Typ waterway river..."));
+                MapEvent(null, new MapEventArgs(i, rivers.Count, "Drawing type waterway river..."));
                 i++;
             }
             dataSourceRivers.RemoveAll(dataSourceRivers.GetAll());
@@ -451,7 +464,7 @@ namespace OHDMApp
 
         private static void DrawLines()
         {
-            MapEvent(null, new MapEventArgs(0, 100, "Frage Lines ab..."));
+            MapEvent(null, new MapEventArgs(0, 100, "Calling lines..."));
             var lines = d.getObjects(day, 2);
             var overlayLayer = new VectorLayer(dataSourceLines);
             overlayLayer.VisibleZoomRange = new MapRange(13, 24);
@@ -477,7 +490,7 @@ namespace OHDMApp
                     Styles.GetDefaultTextStyle().BuildStyle(),
                     obj.name);
                 vText.Add(textpopup1);
-                MapEvent(null, new MapEventArgs(i, lines.Count, "Zeichne Lines..."));
+                MapEvent(null, new MapEventArgs(i, lines.Count, "Drawing lines..."));
                 i++;
             }
             dataSourceLines.RemoveAll(dataSourceLines.GetAll());
@@ -488,14 +501,11 @@ namespace OHDMApp
 
         private static void DrawPolygons()
         {
-            MapEvent(null, new MapEventArgs(0, 100, "Frage Polygone ab..."));
+            MapEvent(null, new MapEventArgs(0, 100, "Calling polygons..."));
             var polygons = d.getObjects(day, 3);
             var overlayLayer = new VectorLayer(dataSourcePolygons);
             overlayLayer.VisibleZoomRange = new MapRange(16, 24);
             mapView.Layers.Add(overlayLayer);
-            //var overlayLayerText = new VectorLayer(dataSourcePolygonsText);
-            //overlayLayerText.VisibleZoomRange = new MapRange(17, 24);
-            //mapView.Layers.Add(overlayLayerText);
             VectorElementVector v = new VectorElementVector();
             VectorElementVector vText = new VectorElementVector();
             int i = 0;
@@ -508,26 +518,19 @@ namespace OHDMApp
                     polygonPoses.Add(projection.FromWgs84(new MapPos(pnt[0], pnt[1])));
                 }
                 Polygon polygon = new Polygon(polygonPoses, Styles.GetDefaultPolygonStyle().BuildStyle());
-                //polygon.SetMetaDataElement("ClickText", obj.name);
                 v.Add(polygon);
                 if (i == 0)
                     mapView.FocusPos = projection.FromWgs84(new MapPos(obj.polygonList.coordinates[0][0][0], obj.polygonList.coordinates[0][0][1]));
-                //var textpopup1 = new Text(projection.FromWgs84(new MapPos(obj.polygonList.coordinates[0][0][0], obj.polygonList.coordinates[0][0][1])),
-                //    Styles.GetDefaultTextStyle().BuildStyle(),
-                //    obj.name);
-                //vText.Add(textpopup1);
-                MapEvent(null, new MapEventArgs(i, polygons.Count, "Zeichne Polygone..."));
+                MapEvent(null, new MapEventArgs(i, polygons.Count, "Drawing polygons..."));
                 i++;
             }
             dataSourcePolygons.RemoveAll(dataSourcePolygons.GetAll());
             dataSourcePolygons.AddAll(v);
-            //dataSourcePolygonsText.RemoveAll(dataSourcePolygonsText.GetAll());
-            //dataSourcePolygonsText.AddAll(vText);
-        }
+            }
 
         private static void DrawWaters()
         {
-            MapEvent(null, new MapEventArgs(0, 100, "Frage Typ natural water ab..."));
+            MapEvent(null, new MapEventArgs(0, 100, "Calling type natural water..."));
             var waters = d.getObjects(day, 3, 672);
             var overlayLayer = new VectorLayer(dataSourceWaters);
             overlayLayer.VisibleZoomRange = new MapRange(6, 24);
@@ -547,7 +550,6 @@ namespace OHDMApp
                     polygonPoses.Add(projection.FromWgs84(new MapPos(pnt[0], pnt[1])));
                 }
                 Polygon polygon = new Polygon(polygonPoses, Styles.GetDefaultWaterStyle().BuildStyle());
-                //polygon.SetMetaDataElement("ClickText", obj.name);
                 v.Add(polygon);
                 if (i == 0)
                     mapView.FocusPos = projection.FromWgs84(new MapPos(obj.polygonList.coordinates[0][0][0], obj.polygonList.coordinates[0][0][1]));
@@ -555,7 +557,7 @@ namespace OHDMApp
                     Styles.GetDefaultTextStyle().BuildStyle(),
                     obj.name);
                 vText.Add(textpopup1);
-                MapEvent(null, new MapEventArgs(i, waters.Count, "Zeichne Typ natural water..."));
+                MapEvent(null, new MapEventArgs(i, waters.Count, "Drawing type natural water..."));
                 i++;
             }
             dataSourceWaters.RemoveAll(dataSourceWaters.GetAll());
@@ -566,7 +568,7 @@ namespace OHDMApp
 
         private static void DrawForests()
         {
-            MapEvent(null, new MapEventArgs(0, 100, "Frage Typ landuse forest ab..."));
+            MapEvent(null, new MapEventArgs(0, 100, "Calling type landuse forest ..."));
             var forests = d.getObjects(day, 3, 472);
             var overlayLayer = new VectorLayer(dataSourceForests);
             overlayLayer.VisibleZoomRange = new MapRange(6, 24);
@@ -594,7 +596,7 @@ namespace OHDMApp
                     Styles.GetDefaultTextStyle().BuildStyle(),
                     obj.name);
                 vText.Add(textpopup1);
-                MapEvent(null, new MapEventArgs(i, forests.Count, "Zeichne Typ landuse forest..."));
+                MapEvent(null, new MapEventArgs(i, forests.Count, "Drawing Type landuse forest..."));
                 i++;
             }
             dataSourceForests.RemoveAll(dataSourceForests.GetAll());
@@ -602,6 +604,83 @@ namespace OHDMApp
             dataSourceForestsText.RemoveAll(dataSourceForestsText.GetAll());
             dataSourceForestsText.AddAll(vText);
         }
+
+        private static void DrawBuildings()
+        {
+            MapEvent(null, new MapEventArgs(0, 100, "Calling type building.."));
+            var Buildings = d.getObjectsByClasseName(day, 3, "building");
+            var overlayLayer = new VectorLayer(dataSourceBuildings);
+            overlayLayer.VisibleZoomRange = new MapRange(16, 24);
+            mapView.Layers.Add(overlayLayer);
+            var overlayLayerText = new VectorLayer(dataSourceBuildingsText);
+            overlayLayerText.VisibleZoomRange = new MapRange(10, 24);
+            mapView.Layers.Add(overlayLayerText);
+            VectorElementVector v = new VectorElementVector();
+            VectorElementVector vText = new VectorElementVector();
+            int i = 0;
+            foreach (var obj in Buildings)
+            {
+                //Define coordinates of outer ring
+                MapPosVector polygonPoses = new MapPosVector();
+                foreach (var pnt in obj.polygonList.coordinates[0])
+                {
+                    polygonPoses.Add(projection.FromWgs84(new MapPos(pnt[0], pnt[1])));
+                }
+                Polygon polygon = new Polygon(polygonPoses, Styles.GetBuildingsStyle().BuildStyle());
+                v.Add(polygon);
+                if (i == 0)
+                    mapView.FocusPos = projection.FromWgs84(new MapPos(obj.polygonList.coordinates[0][0][0], obj.polygonList.coordinates[0][0][1]));
+                var textpopup1 = new Text(projection.FromWgs84(new MapPos(obj.polygonList.coordinates[0][0][0], obj.polygonList.coordinates[0][0][1])),
+                    Styles.GetDefaultTextStyle().BuildStyle(),
+                    obj.name);
+                vText.Add(textpopup1);
+                MapEvent(null, new MapEventArgs(i, Buildings.Count, "Drawing Type Buildings..."));
+                i++;
+            }
+            dataSourceForests.RemoveAll(dataSourceBuildings.GetAll());
+            dataSourceForests.AddAll(v);
+            dataSourceForestsText.RemoveAll(dataSourceBuildingsText.GetAll());
+            dataSourceForestsText.AddAll(vText);
+        }
+
+        private static void DrawShops()
+        {
+            MapEvent(null, new MapEventArgs(0, 100, "Calling Type Shops ..."));
+            var Shops = d.getObjectsByClasseName(day, 3, "shop");
+            var overlayLayer = new VectorLayer(dataSourceShops);
+            overlayLayer.VisibleZoomRange = new MapRange(16, 24);
+            mapView.Layers.Add(overlayLayer);
+            var overlayLayerText = new VectorLayer(dataSourceShopsText);
+            overlayLayerText.VisibleZoomRange = new MapRange(10, 24);
+            mapView.Layers.Add(overlayLayerText);
+            VectorElementVector v = new VectorElementVector();
+            VectorElementVector vText = new VectorElementVector();
+            int i = 0;
+            foreach (var obj in Shops)
+            {
+                //Define coordinates of outer ring
+                MapPosVector polygonPoses = new MapPosVector();
+                foreach (var pnt in obj.polygonList.coordinates[0])
+                {
+                    polygonPoses.Add(projection.FromWgs84(new MapPos(pnt[0], pnt[1])));
+                }
+                Polygon polygon = new Polygon(polygonPoses, Styles.GetShopsStyle().BuildStyle());
+                v.Add(polygon);
+                if (i == 0)
+                    mapView.FocusPos = projection.FromWgs84(new MapPos(obj.polygonList.coordinates[0][0][0], obj.polygonList.coordinates[0][0][1]));
+                var textpopup1 = new Text(projection.FromWgs84(new MapPos(obj.polygonList.coordinates[0][0][0], obj.polygonList.coordinates[0][0][1])),
+                    Styles.GetDefaultTextStyle().BuildStyle(),
+                    obj.name);
+                vText.Add(textpopup1);
+                MapEvent(null, new MapEventArgs(i, Shops.Count, "Drawing Type Shops..."));
+                i++;
+            }
+            dataSourceForests.RemoveAll(dataSourceShops.GetAll());
+            dataSourceForests.AddAll(v);
+            dataSourceForestsText.RemoveAll(dataSourceShopsText.GetAll());
+            dataSourceForestsText.AddAll(vText);
+        }
+
     }
 }
     

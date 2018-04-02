@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="Hello">Hello World, Click Me!</string>
-    <string name="readcsv">CSV mit Kartenmaterial einlesen</string>
-    <string name="ApplicationName">OHDM</string>
+  <string name="Hello">Hello World, Click Me!</string>
+  <string name="readcsv">CSV mit Kartenmaterial einlesen</string>
+  <string name="ApplicationName">OHDM</string>
+
+  <string name="city_prompt">Choose a city</string>
+  
 </resources>

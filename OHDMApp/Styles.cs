@@ -56,8 +56,24 @@ namespace OHDMApp
         {
             // Create polygon style and poses
             PolygonStyleBuilder polygonStyleBuilder = new PolygonStyleBuilder();
-            polygonStyleBuilder.Color = new Carto.Graphics.Color(255, 0, 0, 255); // red
+            polygonStyleBuilder.Color = new Carto.Graphics.Color(174, 199, 239, 255); 
             polygonStyleBuilder.LineStyle = GetDefaultLineStyle().BuildStyle();
+            return polygonStyleBuilder;
+        }
+        public static PolygonStyleBuilder GetBuildingsStyle()
+        {
+            // Create Buildings style and poses
+            PolygonStyleBuilder polygonStyleBuilder = new PolygonStyleBuilder();
+            polygonStyleBuilder.Color = new Carto.Graphics.Color(147, 160, 151, 255);
+            polygonStyleBuilder.LineStyle = GetDefaultLineTransparentStyle().BuildStyle();
+            return polygonStyleBuilder;
+        }
+        public static PolygonStyleBuilder GetShopsStyle()
+        {
+            // Create Buildings style and poses
+            PolygonStyleBuilder polygonStyleBuilder = new PolygonStyleBuilder();
+            polygonStyleBuilder.Color = new Carto.Graphics.Color(92, 104, 95, 255);
+            polygonStyleBuilder.LineStyle = GetDefaultLineTransparentStyle().BuildStyle();
             return polygonStyleBuilder;
         }
 
@@ -74,7 +90,7 @@ namespace OHDMApp
         {
             // Create polygon style and poses
             PolygonStyleBuilder polygonStyleBuilder = new PolygonStyleBuilder();
-            polygonStyleBuilder.Color = new Carto.Graphics.Color(181, 208, 208, 255); 
+            polygonStyleBuilder.Color = new Carto.Graphics.Color(181, 208, 208, 255);
             polygonStyleBuilder.LineStyle = GetDefaultLineTransparentStyle().BuildStyle();
             return polygonStyleBuilder;
         }
